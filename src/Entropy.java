@@ -5,7 +5,7 @@ public class Entropy
 	public static int pickSplit(ArrayList<int[]> arr)
 	{
 		int index = -1;
-		double hold = -1000;
+		double hold = 0;
 		for (int i = 0; i < arr.get(0).length - 1; i++)
 		{
 			double eachgain = gainOfSplit(arr, i);
