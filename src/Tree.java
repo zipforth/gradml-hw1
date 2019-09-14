@@ -32,17 +32,59 @@ public class Tree {
 		}//does the same for the rest of the file
 		
 		//test data split
-		double check =gainOfSplit(arr,5);
+		Node check =makeTree(arr);
 		
-		System.out.println(check);
+		System.out.println(check.n);
 	}
-	public static int pickSplit(ArrayList<int[]> arr)
+	
+	public static Node makeTree(ArrayList<int[]> arr)
 	{
+		return makeTreeR(null,arr);	
+	}
+	public static Node makeTreeR(Node node, ArrayList<int[]> arr)
+	{
+		if(arr.size()<=1)
+			return node;
+		int index=pickSplit(arr);
+		if(index==-1)
+			return node;
+		node=new Node(index);
+		ArrayList index0 = new ArrayList<int[]>();
+		ArrayList index1 = new ArrayList<int[]>();
 		for(int i=0;i<arr.size();i++)
 		{
 			
+			if(arr.get(i)[index]==0)
+			{
+				index0.add(arr.get(i));
+			}
+			else
+				index1.add(arr.get(i));
+			
 		}
-		return 0;
+		node.left= makeTreeR(node.left,index0);
+		node.right= makeTreeR(node.right,index1);
+		return node;
+	}
+	
+	
+	
+	
+	public static int pickSplit(ArrayList<int[]> arr)
+	{
+		int index=-1;
+		double hold=0;
+		for(int i=0;i<arr.size()-1;i++)
+		{
+			double eachgain=gainOfSplit(arr,i);
+			if(eachgain>hold)
+			{
+				index=i;
+				hold=eachgain;
+				//System.out.println("index "+i+ "gain "+eachgain);
+			}
+		}
+		return index;
 	}
 	public static double gainOfSplit(ArrayList<int[]> arr, int index)
 	{
@@ -60,7 +102,7 @@ public class Tree {
 				index1.add(arr.get(i)[arr.get(i).length-1]);
 			
 		}
-		double hold=entropyOfSplit(classnow)-(index0.size()/classnow.size())*entropyOfSplit(index0)-(index1.size()/classnow.size())*entropyOfSplit(index1);
+		double hold=entropyOfSplit(classnow)-((double)index0.size()/classnow.size())*entropyOfSplit(index0)-((double)index1.size()/classnow.size())*entropyOfSplit(index1);
 		
 		
 		
