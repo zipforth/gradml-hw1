@@ -5,7 +5,7 @@ import java.util.Scanner;
 
 public class Tree
 {
-	static boolean isEntropy=true;
+	
 	public static void main(String[] args) throws FileNotFoundException
 	{
 		// TODO Auto-generated method stub
@@ -33,15 +33,20 @@ public class Tree
 		} // does the same for the rest of the file
 
 		// test data split
-		Node check = makeTree(arr);
-		double ratio = 0;
+		Node entropycheck = makeTree(arr,true);
+		Node vicheck = makeTree(arr,false);
+		double entropyratio = 0;
+		double viratio=0;
 		for (int i = 0; i < arr.size(); i++)
 		{
-			int a= Math.abs(arr.get(i)[arr.get(i).length - 1] - checkData(check, arr.get(i)));
-			System.out.println(a);
-			ratio += a;
+			int a= Math.abs(arr.get(i)[arr.get(i).length - 1] - checkData(entropycheck, arr.get(i)));
+			int b= Math.abs(arr.get(i)[arr.get(i).length - 1] - checkData(vicheck, arr.get(i)));
+			
+			entropyratio += a;
+			viratio+= b;
 		}
-		System.out.println(1 - ratio / arr.size());
+		System.out.println(1 - entropyratio / arr.size());
+		System.out.println(1 - viratio / arr.size());
 
 	}
 
@@ -61,12 +66,12 @@ public class Tree
 			return checkData(node.right, data);
 	}
 
-	public static Node makeTree(ArrayList<int[]> arr)
+	public static Node makeTree(ArrayList<int[]> arr,boolean isEntropy)
 	{
-		return makeTreeR(null, arr);
+		return makeTreeR(null, arr,isEntropy);
 	}
 
-	public static Node makeTreeR(Node node, ArrayList<int[]> arr)
+	public static Node makeTreeR(Node node, ArrayList<int[]> arr,boolean isEntropy)
 	{
 		if (arr.size() <= 1)
 			return new Node(arr.get(0)[arr.get(0).length-1]-2);
@@ -89,7 +94,7 @@ public class Tree
 			return node;
 
 		}
-		
+		//System.out.println("goodbye");
 		node = new Node(index);
 		ArrayList<int[]> index0 = new ArrayList<int[]>();
 		ArrayList<int[]> index1 = new ArrayList<int[]>();
@@ -127,7 +132,7 @@ public class Tree
 			} else
 			{
 				
-				node.left = makeTreeR(node.left, index0);
+				node.left = makeTreeR(node.left, index0,isEntropy);
 			}
 		}
 
@@ -138,7 +143,7 @@ public class Tree
 			if (sumi1 == index1.size())
 				node.right = new Node(-1);
 			else
-				node.right = makeTreeR(node.right, index1);
+				node.right = makeTreeR(node.right, index1,isEntropy);
 		}
 
 		return node;
