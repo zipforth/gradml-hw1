@@ -15,7 +15,7 @@ public class Entropy
 				hold = eachgain;
 				
 			}
-			 //System.out.println("index "+i+ "gain "+eachgain);
+			 System.out.println("index "+i+ "gain "+eachgain);
 		}
 		return index;
 	}

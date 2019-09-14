@@ -9,7 +9,7 @@ public class Tree
 	public static void main(String[] args) throws FileNotFoundException
 	{
 		// TODO Auto-generated method stub
-		Scanner file = new Scanner(new File("all_data\\train_c300_d100.csv"));// test only, will move to command line
+		Scanner file = new Scanner(new File("all_data\\train_c1800_d5000.csv"));// test only, will move to command line
 		String hold = file.nextLine();// gets string of data
 		String[] holdarr = hold.split(",");
 		int[] arrholdint = new int[holdarr.length];
@@ -84,7 +84,7 @@ public class Tree
 			index = VI.pickSplit(arr);
 		if (index == -1)
 		{
-			System.out.println("hello");
+			//System.out.println("hello");
 			int sumi0 = 0;
 			for (int i = 0; i < arr.size(); i++)
 			{
