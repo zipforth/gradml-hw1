@@ -15,7 +15,7 @@ public class Entropy
 				hold = eachgain;
 				
 			}
-			 System.out.println("index "+i+ "gain "+eachgain);
+			 //System.out.println("index "+i+ "gain "+eachgain);
 		}
 		return index;
 	}
@@ -62,7 +62,7 @@ public class Entropy
 
 		double frac0 = (split0+1) / (split0 + split1+2);
 		double frac1 = (split1+1) / (split0 + split1+2);//laplace smoothing
-		System.out.println((Math.log(frac0) / Math.log(2))+" "+(Math.log(frac1) / Math.log(2)));
+		//System.out.println((Math.log(frac0) / Math.log(2))+" "+(Math.log(frac1) / Math.log(2)));
 		double entropy = -(frac0 * (Math.log(frac0) / Math.log(2))) - (frac1 * (Math.log(frac1) / Math.log(2)));
 		return entropy;
 	}
