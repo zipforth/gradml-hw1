@@ -3,12 +3,18 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import weka.classifiers.Classifier;
+import weka.classifiers.Evaluation;
+import weka.classifiers.trees.RandomForest;
+import weka.core.Instances;
+import weka.core.converters.CSVLoader;
+
 public class Tree
 {
 	public static int[] depths =
 	{ 5, 10, 15, 20, 50, 100 };// this is for depth based
 
-	public static void main(String[] args) throws FileNotFoundException
+	public static void main(String[] args) throws Exception
 	{
 		// TODO Auto-generated method stub
 
@@ -25,52 +31,96 @@ public class Tree
 
 		if (args.length == 4)// params passed
 		{
-			if (!isDepth)
+			if (args[3].contains("f") || args[3].contains("F"))
 			{
-				if (isV)// trains on VI
+
+				System.out.println(randForest(args[0], args[1], args[2]));
+
+			} else
+			{
+				if (!isDepth)
 				{
-					decisions = makeTree(train, false, Integer.MAX_VALUE);
-				} else// trains on entropy
+					if (isV)// trains on VI
+					{
+						decisions = makeTree(train, false, Integer.MAX_VALUE);
+					} else// trains on entropy
+					{
+						decisions = makeTree(train, true, Integer.MAX_VALUE);
+						System.out.print("entropy");
+					}
+					if (isPrune)// additionally checks validity with pruning
+					{
+						decisions = Prune(decisions, valid);
+
+					}
+				} else// depth based validation
 				{
-					decisions = makeTree(train, true, Integer.MAX_VALUE);
-					System.out.print("entropy");
-				}
-				if (isPrune)// additionally checks validity with pruning
-				{
-					decisions = Prune(decisions, valid);
+					Node[] vardepths = new Node[6];
+					for (int i = 0; i < 6; i++)
+					{
+						if (isV)// for VI
+							vardepths[i] = makeTree(train, false, depths[i]);
+						else// for entropy
+							vardepths[i] = makeTree(train, true, depths[i]);
+					}
+					double[] accdepths = new double[6];
+					for (int i = 0; i < 6; i++)// checks accuracy of each model on the validation set
+					{
+						accdepths[i] = checkTree(vardepths[i], valid);
+					}
+					int index = -1;
+					double acc = 0;
+					for (int i = 5; i >= 0; i--)// picks most accurate model
+					{
+						if (accdepths[i] >= acc)
+							acc = accdepths[i];
+						index = i;
+					}
+					decisions = vardepths[index];// sets tree to that model
 
 				}
-			} else// depth based validation
-			{
-				Node[] vardepths = new Node[6];
-				for (int i = 0; i < 6; i++)
-				{
-					if (isV)// for VI
-						vardepths[i] = makeTree(train, false, depths[i]);
-					else// for entropy
-						vardepths[i] = makeTree(train, true, depths[i]);
-				}
-				double[] accdepths = new double[6];
-				for (int i = 0; i < 6; i++)// checks accuracy of each model on the validation set
-				{
-					accdepths[i] = checkTree(vardepths[i], valid);
-				}
-				int index = -1;
-				double acc = 0;
-				for (int i = 5; i >= 0; i--)// picks most accurate model
-				{
-					if (accdepths[i] >= acc)
-						acc = accdepths[i];
-					index = i;
-				}
-				decisions = vardepths[index];// sets tree to that model
-
+				System.out.println(checkTree(decisions, test));// returns the accuracy of the chosen model on the test
+																// data
 			}
 
 		}
 
-		System.out.println(checkTree(decisions, test));// returns the accuracy of the chosen model on the test data
+	}
 
+	public static String randForest(String file1, String file2, String file3) throws Exception
+	{
+		CSVLoader train = new CSVLoader();
+		train.setNoHeaderRowPresent(true);
+		train.setSource(new File(file1));
+
+		CSVLoader valid = new CSVLoader();
+		valid.setNoHeaderRowPresent(true);
+		valid.setSource(new File(file2));
+
+		CSVLoader test = new CSVLoader();
+		test.setNoHeaderRowPresent(true);
+		test.setSource(new File(file3));
+
+		Instances traindata = train.getDataSet();
+		int hold = traindata.numAttributes() - 1;
+		traindata.setClassIndex(hold);
+
+		Instances validdata = valid.getDataSet();
+		hold = validdata.numAttributes() - 1;
+		validdata.setClassIndex(hold);
+
+		Instances testdata = test.getDataSet();
+		hold = testdata.numAttributes() - 1;
+		testdata.setClassIndex(hold);
+
+		Classifier randomForest = new RandomForest();
+		randomForest.buildClassifier(traindata);
+
+		Evaluation eval = new Evaluation(validdata);
+		eval.evaluateModel(randomForest, testdata);
+
+		double err = eval.pctCorrect();
+		return eval.toSummaryString();
 	}
 
 	public static Node Prune(Node node, ArrayList<int[]> arr)
@@ -138,7 +188,7 @@ public class Tree
 				index0.add(arr.get(i));
 				if (arr.get(i)[arr.get(i).length - 1] == 1)
 					num1in0++;
-			} else//same as above, but with ones in the 1 split
+			} else// same as above, but with ones in the 1 split
 			{
 				index1.add(arr.get(i));
 				if (arr.get(i)[arr.get(i).length - 1] == 1)
@@ -157,27 +207,27 @@ public class Tree
 		}
 		pathL.add(0.0);// adds a left direction
 		pathR.add(1.0);// adds a right direction
-		ArrayList<Double> lefterr = prunePath(node.left, index0, pathL);//gets the max of left and right
+		ArrayList<Double> lefterr = prunePath(node.left, index0, pathL);// gets the max of left and right
 		ArrayList<Double> righterr = prunePath(node.right, index1, pathR);
 		double accuracy = checkTree(node, arr);
 		Node temp = new Node((int) Math.round((double) numtot / arr.size()) - 2);
 		temp.left = null;
 		temp.right = null;
 		double check = checkTree(temp, arr);
-		if (check >= accuracy)//if old accuracy is < accuracy as a leaf
+		if (check >= accuracy)// if old accuracy is < accuracy as a leaf
 		{
 
-			path.set(0, check);//set accuracy
-			path.set(1, (double) temp.n);//set class
-			
+			path.set(0, check);// set accuracy
+			path.set(1, (double) temp.n);// set class
+
 		}
 		double a = lefterr.get(0);
 		double b = path.get(0);
 		double c = righterr.get(0);
-		double ans = Math.max(Math.max(a, b), c);//gets the max accuracy increase
+		double ans = Math.max(Math.max(a, b), c);// gets the max accuracy increase
 		if (ans == a)
 		{
-			
+
 			return lefterr;
 		} else
 		{
@@ -188,11 +238,9 @@ public class Tree
 				return path;
 
 		}
-		
-		return path;//returns the path to the largest accuracy so far
-	}
 
-	
+		return path;// returns the path to the largest accuracy so far
+	}
 
 	public static double checkTree(Node tree, ArrayList<int[]> arr)
 	{
@@ -200,11 +248,11 @@ public class Tree
 		for (int i = 0; i < arr.size(); i++)
 		{
 			int a = Math.abs(arr.get(i)[arr.get(i).length - 1] - checkData(tree, arr.get(i)));
-			//if the target classification matches the prediction, a will be 0, else a is 1
+			// if the target classification matches the prediction, a will be 0, else a is 1
 
-			viratio += a;//this tallies all the wrong guesses
+			viratio += a;// this tallies all the wrong guesses
 		}
-		return 1 - (viratio / arr.size());//gets the accuracy
+		return 1 - (viratio / arr.size());// gets the accuracy
 	}
 
 	public static ArrayList<int[]> readcsv(String name) throws FileNotFoundException
@@ -231,12 +279,12 @@ public class Tree
 			}
 			arr.add(arrholdint);
 		} // does the same for the rest of the file
-		return arr;//gives an arraylist of arrays to be used as data in the tree making
+		return arr;// gives an arraylist of arrays to be used as data in the tree making
 	}
 
 	public static int checkData(Node node, int[] data)
 	{
-		//keeps going through the tree until a leaf is found, return the leaf value
+		// keeps going through the tree until a leaf is found, return the leaf value
 		if (node == null)
 			return -1;
 		if (node.n == -1)
@@ -251,7 +299,7 @@ public class Tree
 			return checkData(node.right, data);
 	}
 
-	public static Node makeTree(ArrayList<int[]> arr, boolean isEntropy, int depth)//wrapper for recursion
+	public static Node makeTree(ArrayList<int[]> arr, boolean isEntropy, int depth)// wrapper for recursion
 	{
 		return makeTreeR(null, arr, isEntropy, depth);
 	}
@@ -259,9 +307,9 @@ public class Tree
 	public static Node makeTreeR(Node node, ArrayList<int[]> arr, boolean isEntropy, int depth)
 	{
 
-		if (arr.size() <= 1)//there's only one data point, so make a leaf with that value
+		if (arr.size() <= 1)// there's only one data point, so make a leaf with that value
 			return new Node(arr.get(0)[arr.get(0).length - 1] - 2);
-		if (depth == 1)//for depth restriction, 
+		if (depth == 1)// for depth restriction,
 		{
 			int sumi0 = 0;
 			for (int i = 0; i < arr.size(); i++)
@@ -269,17 +317,17 @@ public class Tree
 				sumi0 += arr.get(i)[arr.get(i).length - 1];
 			}
 			node = new Node((int) Math.round((double) sumi0 / arr.size()) - 2);
-			return node;//assigns most likely value from the set to this leaf
+			return node;// assigns most likely value from the set to this leaf
 		}
 		int index;
-		if (isEntropy)//entropy or VI
+		if (isEntropy)// entropy or VI
 		{
 			index = Entropy.pickSplit(arr);
 		} else
 			index = VI.pickSplit(arr);
 		if (index == -1)
 		{
-			//there are no more better splits, so create a leaf
+			// there are no more better splits, so create a leaf
 			int sumi0 = 0;
 			for (int i = 0; i < arr.size(); i++)
 			{
@@ -289,7 +337,7 @@ public class Tree
 			return node;
 
 		}
-		
+
 		node = new Node(index);
 		ArrayList<int[]> index0 = new ArrayList<int[]>();
 		ArrayList<int[]> index1 = new ArrayList<int[]>();
@@ -314,12 +362,12 @@ public class Tree
 			sumi1 += index1.get(i)[index1.get(i).length - 1];
 		}
 
-		if (sumi0 == 0)//if the values are all the same, do these
+		if (sumi0 == 0)// if the values are all the same, do these
 		{
 
 			node.left = new Node(-2);
 		} else
-		{//or continue building the tree
+		{// or continue building the tree
 			if (sumi0 == index0.size())
 			{
 
