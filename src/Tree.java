@@ -8,7 +8,7 @@ public class Tree
 	public static int[] depths =
 	{ 5, 10, 15, 20, 50, 100 };// this is for depth based
 
-	public static Double main(String[] args) throws FileNotFoundException
+	public static void main(String[] args) throws FileNotFoundException
 	{
 		// TODO Auto-generated method stub
 
@@ -69,7 +69,7 @@ public class Tree
 
 		}
 
-		return checkTree(decisions, test);// returns the accuracy of the chosen model on the test data
+		System.out.println(checkTree(decisions, test));// returns the accuracy of the chosen model on the test data
 
 	}
 
