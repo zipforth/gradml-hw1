@@ -2,26 +2,25 @@ import java.util.ArrayList;
 
 public class VI
 {
-	public static int pickSplit(ArrayList<int[]> arr)
+	public static int pickSplit(ArrayList<int[]> arr)// called by tree maker function
 	{
 		int index = -1;
 		double hold = 0;
 		for (int i = 0; i < arr.get(0).length - 1; i++)
 		{
-			double eachgain = gainOfSplit(arr, i);
+			double eachgain = gainOfSplit(arr, i);// finds max gain
 			if (eachgain > hold)
 			{
 				index = i;
 				hold = eachgain;
-				 //System.out.println("index "+i+ "gain "+eachgain);
-				 
+
 			}
 		}
-		
+
 		return index;
 	}
 
-	public static double gainOfSplit(ArrayList<int[]> arr, int index)
+	public static double gainOfSplit(ArrayList<int[]> arr, int index)// finds split
 	{
 		ArrayList<Integer> index0 = new ArrayList<Integer>();
 		ArrayList<Integer> index1 = new ArrayList<Integer>();
@@ -33,11 +32,12 @@ public class VI
 			{
 				index0.add(arr.get(i)[arr.get(i).length - 1]);
 			} else
-				index1.add(arr.get(i)[arr.get(i).length - 1]);
+				index1.add(arr.get(i)[arr.get(i).length - 1]);// splits data set on index
 
 		}
 		double hold = VIOfSplit(classnow) - ((double) index0.size() / classnow.size()) * VIOfSplit(index0)
 				- ((double) index1.size() / classnow.size()) * VIOfSplit(index1);
+		// original VI - prob*VI0 - prob*VI1
 
 		return hold;
 	}
@@ -53,9 +53,9 @@ public class VI
 			} else
 				split1++;
 		}
-
+		// finds sum of 1s and 0s, turns into fractions
 		double frac0 = split0 / (split0 + split1);
 		double frac1 = split1 / (split0 + split1);
-		return frac0*frac1;
+		return frac0 * frac1;
 	}
 }

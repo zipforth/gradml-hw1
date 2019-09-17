@@ -6,9 +6,9 @@ import java.util.Scanner;
 public class Tree
 {
 	public static int[] depths =
-	{ 5, 10, 15, 20, 50, 100 };
+	{ 5, 10, 15, 20, 50, 100 };// this is for depth based
 
-	public static void main(String[] args) throws FileNotFoundException
+	public static Double main(String[] args) throws FileNotFoundException
 	{
 		// TODO Auto-generated method stub
 
@@ -16,113 +16,111 @@ public class Tree
 		ArrayList<int[]> valid = readcsv(args[1]);
 		ArrayList<int[]> test = readcsv(args[2]);
 
-		Node decisions = new Node(-5);
-		boolean isV = (args[3].contains("v")||args[3].contains("V"));;
-		boolean isPrune = (args[3].contains("p")||args[3].contains("P"));
-		boolean isDepth = (args[3].contains("d")||args[3].contains("D"));
-		if (args.length == 3)
-			decisions = makeTree(train, true, Integer.MAX_VALUE);
+		Node decisions = new Node(-5);// becomes decision tree
+		boolean isV = (args[3].contains("v") || args[3].contains("V"));// does user want VI
+		boolean isPrune = (args[3].contains("p") || args[3].contains("P"));// does user want pruning
+		boolean isDepth = (args[3].contains("d") || args[3].contains("D"));// does user want depth based
+		if (args.length == 3)// no params passed
+			decisions = makeTree(train, true, Integer.MAX_VALUE);// train only with entropy
 
-		if (args.length == 4)
+		if (args.length == 4)// params passed
 		{
 			if (!isDepth)
 			{
-				if (isV)
+				if (isV)// trains on VI
 				{
 					decisions = makeTree(train, false, Integer.MAX_VALUE);
-				} else
+				} else// trains on entropy
 				{
 					decisions = makeTree(train, true, Integer.MAX_VALUE);
 					System.out.print("entropy");
 				}
-				if (isPrune)
+				if (isPrune)// additionally checks validity with pruning
 				{
 					decisions = Prune(decisions, valid);
-					System.out.print("pruning");
+
 				}
-			} else
+			} else// depth based validation
 			{
 				Node[] vardepths = new Node[6];
 				for (int i = 0; i < 6; i++)
 				{
-					if (isV)
+					if (isV)// for VI
 						vardepths[i] = makeTree(train, false, depths[i]);
-					else
+					else// for entropy
 						vardepths[i] = makeTree(train, true, depths[i]);
 				}
 				double[] accdepths = new double[6];
-				for (int i = 0; i < 6; i++)
+				for (int i = 0; i < 6; i++)// checks accuracy of each model on the validation set
 				{
 					accdepths[i] = checkTree(vardepths[i], valid);
 				}
 				int index = -1;
 				double acc = 0;
-				for (int i = 5; i >= 0; i--)
+				for (int i = 5; i >= 0; i--)// picks most accurate model
 				{
 					if (accdepths[i] >= acc)
 						acc = accdepths[i];
 					index = i;
 				}
-				decisions = vardepths[index];
+				decisions = vardepths[index];// sets tree to that model
 
-				// depth options go here
 			}
 
 		}
-		// test data split
-		System.out.println(checkTree(decisions, test));
+
+		return checkTree(decisions, test);// returns the accuracy of the chosen model on the test data
 
 	}
 
 	public static Node Prune(Node node, ArrayList<int[]> arr)
 	{
 		boolean flag = true;
-		ArrayList<Double> path = new ArrayList<Double>();
-		ArrayList<Double> ans;
+		ArrayList<Double> path = new ArrayList<Double>();// this lets the function trace back to the node to be removed
+		ArrayList<Double> ans;// this gets the accuracy (index 0) class (index 1) and path(index 2..)
 		while (flag)
 		{
-			
-			path.add(-1.0);
-			path.add(-3.0);
-			ans = placehold(node, arr, path);
-			//System.out.println(ans.toString());
-			if (ans.get(0) > -1)
+
+			path.add(-1.0);// placeholder for accuracy
+			path.add(-3.0);// placeholder for class
+			ans = prunePath(node, arr, path);
+
+			if (ans.get(0) > -1)// if >-1, the algorithm found a best node that benefits from pruning
 			{
-				ans.remove(0);
-				node = nodeRemover(node, ans);
+				ans.remove(0);// trims the accuracy, don't need anymore
+				node = nodeRemover(node, ans);// removes the node from the tree
 			} else
-				flag = false;
-			path.clear();
+				flag = false;// didn't find another better one, so drops out
+			path.clear();// resetting arraylists
 			ans.clear();
 		}
-		return node;
+		return node;// returns the pruned tree
 	}
 
 	public static Node nodeRemover(Node node, ArrayList<Double> path)
 	{
-		//System.out.println("removal "+path.toString());
-		if (path.size() == 1)
+
+		if (path.size() == 1)// it's reached the node to remove
 		{
-			return new Node((int) Math.round(path.get(0)));
+			return new Node((int) Math.round(path.get(0)));// uses previously generated class
 		}
-		if (path.get(1) == 0.0)
+		if (path.get(1) == 0.0)// go left
 		{
-			path.remove(1);
-			node.left= nodeRemover(node.left, path);
-		} else
+			path.remove(1);// sets up next direction
+			node.left = nodeRemover(node.left, path);
+		} else// go right
 		{
-			path.remove(1);
-			node.right= nodeRemover(node.right, path);
+			path.remove(1);// sets up next direction
+			node.right = nodeRemover(node.right, path);
 		}
-		return node;
+		return node;// returns the tree with the newly pruned node
 
 	}
 
-	public static ArrayList<Double> placehold(Node node, ArrayList<int[]> arr, ArrayList<Double> path)
+	public static ArrayList<Double> prunePath(Node node, ArrayList<int[]> arr, ArrayList<Double> path)
 	{
-		if (node.n < 0)
+		if (node.n < 0)// therefore leaf, don't have to check to prune
 		{
-			//System.out.println("dropped "+path.toString());
 			return path;
 		}
 
@@ -131,16 +129,16 @@ public class Tree
 		int num1in0 = 0;
 		int num1in1 = 0;
 		int numtot = 0;
-		for (int i = 0; i < arr.size(); i++)
+		for (int i = 0; i < arr.size(); i++)// splits data points on node and calculates the number of ones in the set
 		{
-			if (arr.get(i)[arr.get(i).length-1] == 1)
+			if (arr.get(i)[arr.get(i).length - 1] == 1)
 				numtot++;
-			if (arr.get(i)[node.n] == 0)
+			if (arr.get(i)[node.n] == 0)// if index ==0, put into 0 split
 			{
 				index0.add(arr.get(i));
 				if (arr.get(i)[arr.get(i).length - 1] == 1)
 					num1in0++;
-			} else
+			} else//same as above, but with ones in the 1 split
 			{
 				index1.add(arr.get(i));
 				if (arr.get(i)[arr.get(i).length - 1] == 1)
@@ -152,89 +150,49 @@ public class Tree
 
 		ArrayList<Double> pathR = new ArrayList<Double>();
 
-		for (int i = 0; i < path.size(); i++)
+		for (int i = 0; i < path.size(); i++)// new paths based on old to avoid shallow copy
 		{
 			pathL.add(path.get(i));
 			pathR.add(path.get(i));
 		}
-		pathL.add(0.0);
-		pathR.add(1.0);
-		ArrayList<Double> lefterr = placehold(node.left, index0, pathL);
-		ArrayList<Double> righterr = placehold(node.right, index1, pathR);
+		pathL.add(0.0);// adds a left direction
+		pathR.add(1.0);// adds a right direction
+		ArrayList<Double> lefterr = prunePath(node.left, index0, pathL);//gets the max of left and right
+		ArrayList<Double> righterr = prunePath(node.right, index1, pathR);
 		double accuracy = checkTree(node, arr);
 		Node temp = new Node((int) Math.round((double) numtot / arr.size()) - 2);
 		temp.left = null;
 		temp.right = null;
 		double check = checkTree(temp, arr);
-		if (check >= accuracy)
+		if (check >= accuracy)//if old accuracy is < accuracy as a leaf
 		{
+
+			path.set(0, check);//set accuracy
+			path.set(1, (double) temp.n);//set class
 			
-			path.set(0, check);
-			path.set(1, (double) temp.n);
-			//System.out.println("in "+path.toString());
 		}
 		double a = lefterr.get(0);
 		double b = path.get(0);
 		double c = righterr.get(0);
-		double ans = Math.max(Math.max(a, b), c);
+		double ans = Math.max(Math.max(a, b), c);//gets the max accuracy increase
 		if (ans == a)
 		{
-			//System.out.println("chose left from "+a+" "+b+" "+c);
+			
 			return lefterr;
 		} else
 		{
 			if (ans == c)
 			{
 				return righterr;
-			} else
-				if(ans==b)
-					return path;
+			} else if (ans == b)
+				return path;
 
 		}
-		System.out.println("not allowed");
-		return path;
+		
+		return path;//returns the path to the largest accuracy so far
 	}
 
-	public static Node postPrune(Node node, ArrayList<int[]> arr)
-	{
-		if (node.n < 0)
-			return node;
-
-		ArrayList<int[]> index0 = new ArrayList<int[]>();
-		ArrayList<int[]> index1 = new ArrayList<int[]>();
-		int num1in0 = 0;
-		int num1in1 = 0;
-		for (int i = 0; i < arr.size(); i++)
-		{
-
-			if (arr.get(i)[node.n] == 0)
-			{
-				index0.add(arr.get(i));
-				if (arr.get(i)[arr.get(i).length - 1] == 1)
-					num1in0++;
-			} else
-			{
-				index1.add(arr.get(i));
-				if (arr.get(i)[arr.get(i).length - 1] == 1)
-					num1in1++;
-			}
-
-		}
-		node.left = postPrune(node.left, index0);
-		node.right = postPrune(node.right, index1);
-		double accuracy = checkTree(node, arr);
-		Node temp = new Node(node.n);
-		temp.left = new Node((int) Math.round((double) num1in0 / index0.size()) - 2);
-		temp.right = new Node((int) Math.round((double) num1in1 / index1.size()) - 2);
-		double check = checkTree(temp, arr);
-		if (check >= accuracy)
-		{
-			node.left = new Node((int) Math.round((double) num1in0 / index0.size()) - 2);
-			node.right = new Node((int) Math.round((double) num1in1 / index1.size()) - 2);
-		}
-		return node;
-
-	}
+	
 
 	public static double checkTree(Node tree, ArrayList<int[]> arr)
 	{
@@ -242,15 +200,16 @@ public class Tree
 		for (int i = 0; i < arr.size(); i++)
 		{
 			int a = Math.abs(arr.get(i)[arr.get(i).length - 1] - checkData(tree, arr.get(i)));
+			//if the target classification matches the prediction, a will be 0, else a is 1
 
-			viratio += a;
+			viratio += a;//this tallies all the wrong guesses
 		}
-		return 1 - viratio / arr.size();
+		return 1 - (viratio / arr.size());//gets the accuracy
 	}
 
 	public static ArrayList<int[]> readcsv(String name) throws FileNotFoundException
 	{
-		Scanner file = new Scanner(new File(name));// test only, will move to command line
+		Scanner file = new Scanner(new File(name));
 		String hold = file.nextLine();// gets string of data
 		String[] holdarr = hold.split(",");
 		int[] arrholdint = new int[holdarr.length];
@@ -272,11 +231,12 @@ public class Tree
 			}
 			arr.add(arrholdint);
 		} // does the same for the rest of the file
-		return arr;
+		return arr;//gives an arraylist of arrays to be used as data in the tree making
 	}
 
 	public static int checkData(Node node, int[] data)
 	{
+		//keeps going through the tree until a leaf is found, return the leaf value
 		if (node == null)
 			return -1;
 		if (node.n == -1)
@@ -291,7 +251,7 @@ public class Tree
 			return checkData(node.right, data);
 	}
 
-	public static Node makeTree(ArrayList<int[]> arr, boolean isEntropy, int depth)
+	public static Node makeTree(ArrayList<int[]> arr, boolean isEntropy, int depth)//wrapper for recursion
 	{
 		return makeTreeR(null, arr, isEntropy, depth);
 	}
@@ -299,9 +259,9 @@ public class Tree
 	public static Node makeTreeR(Node node, ArrayList<int[]> arr, boolean isEntropy, int depth)
 	{
 
-		if (arr.size() <= 1)
+		if (arr.size() <= 1)//there's only one data point, so make a leaf with that value
 			return new Node(arr.get(0)[arr.get(0).length - 1] - 2);
-		if (depth == 1)
+		if (depth == 1)//for depth restriction, 
 		{
 			int sumi0 = 0;
 			for (int i = 0; i < arr.size(); i++)
@@ -309,17 +269,17 @@ public class Tree
 				sumi0 += arr.get(i)[arr.get(i).length - 1];
 			}
 			node = new Node((int) Math.round((double) sumi0 / arr.size()) - 2);
-			return node;
+			return node;//assigns most likely value from the set to this leaf
 		}
 		int index;
-		if (isEntropy)
+		if (isEntropy)//entropy or VI
 		{
 			index = Entropy.pickSplit(arr);
 		} else
 			index = VI.pickSplit(arr);
 		if (index == -1)
 		{
-			// System.out.println("hello");
+			//there are no more better splits, so create a leaf
 			int sumi0 = 0;
 			for (int i = 0; i < arr.size(); i++)
 			{
@@ -329,7 +289,7 @@ public class Tree
 			return node;
 
 		}
-		// System.out.println("goodbye");
+		
 		node = new Node(index);
 		ArrayList<int[]> index0 = new ArrayList<int[]>();
 		ArrayList<int[]> index1 = new ArrayList<int[]>();
@@ -354,12 +314,12 @@ public class Tree
 			sumi1 += index1.get(i)[index1.get(i).length - 1];
 		}
 
-		if (sumi0 == 0)
+		if (sumi0 == 0)//if the values are all the same, do these
 		{
 
 			node.left = new Node(-2);
 		} else
-		{
+		{//or continue building the tree
 			if (sumi0 == index0.size())
 			{
 

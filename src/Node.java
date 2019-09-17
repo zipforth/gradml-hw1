@@ -2,7 +2,7 @@
 public class Node
 {
 
-	int		n;
+	int		n;		// variable to split on
 	Node	left;
 	Node	right;
 
