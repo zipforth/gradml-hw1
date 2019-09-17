@@ -13,9 +13,9 @@ public class Entropy
 			{
 				index = i;
 				hold = eachgain;
-				
+
 			}
-			 System.out.println("index "+i+ "gain "+eachgain);
+			//System.out.println("index " + i + "gain " + eachgain);
 		}
 		return index;
 	}
@@ -35,15 +35,14 @@ public class Entropy
 				index1.add(arr.get(i)[arr.get(i).length - 1]);
 
 		}
-		double a,b,c,d,e;
-		a=entropyOfSplit(classnow);
-		b=((double) index0.size() / classnow.size());
-		c=entropyOfSplit(index0);
-		d=((double) index1.size() / classnow.size());
-		e=entropyOfSplit(index1);
-		//System.out.println(a+" "+ b +" "+c+" "+d+" "+e);
-		double hold = a - (b * c)
-				- (d * e);
+		double a, b, c, d, e;
+		a = entropyOfSplit(classnow);
+		b = ((double) index0.size() / classnow.size());
+		c = entropyOfSplit(index0);
+		d = ((double) index1.size() / classnow.size());
+		e = entropyOfSplit(index1);
+		// System.out.println(a+" "+ b +" "+c+" "+d+" "+e);
+		double hold = a - (b * c) - (d * e);
 
 		return hold;
 	}
@@ -60,9 +59,10 @@ public class Entropy
 				split1++;
 		}
 
-		double frac0 = (split0+1) / (split0 + split1+2);
-		double frac1 = (split1+1) / (split0 + split1+2);//laplace smoothing
-		//System.out.println((Math.log(frac0) / Math.log(2))+" "+(Math.log(frac1) / Math.log(2)));
+		double frac0 = (split0 + 1) / (split0 + split1 + 2);
+		double frac1 = (split1 + 1) / (split0 + split1 + 2);// laplace smoothing
+		// System.out.println((Math.log(frac0) / Math.log(2))+" "+(Math.log(frac1) /
+		// Math.log(2)));
 		double entropy = -(frac0 * (Math.log(frac0) / Math.log(2))) - (frac1 * (Math.log(frac1) / Math.log(2)));
 		return entropy;
 	}
